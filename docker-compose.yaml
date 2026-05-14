@@ -1,0 +1,45 @@
+services:
+  origin:
+    build: ./origin
+    container_name: cdn-origin
+    networks:
+      - cdn-net
+
+  edge-us-east:
+    build: ./edge
+    container_name: edge-us-east
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - REGION=US-East
+      - LATENCY=20ms
+      - ORIGIN_URL=http://cdn-origin:8000  # <--- Use the NAME
+    networks:
+      - cdn-net
+
+  edge-europe:
+    build: ./edge
+    container_name: edge-europe
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - REGION=Europe
+      - LATENCY=120ms
+      - ORIGIN_URL=http://cdn-origin:8000  # <--- Use the NAME
+    networks:
+      - cdn-net
+
+  anycast-router:
+    build: ./router
+    container_name: anycast-router
+    ports:
+      - "8080:8000"
+    depends_on:
+      - edge-us-east
+      - edge-europe
+    networks:
+      - cdn-net
+
+networks:
+  cdn-net:
+    driver: bridge  # No more manual subnets/IPs

@@ -1,0 +1,24 @@
+# Use a lightweight Python image
+FROM python:3.12-slim
+
+# Install system dependencies for networking simulation
+RUN apt-get update && apt-get install -y \
+    iputils-ping \
+    curl \
+    net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Python dependencies
+RUN pip install fastapi uvicorn httpx
+
+# Copy the application code and the networking script
+COPY main.py .
+COPY entrypoint.sh .
+
+# Make the networking script executable
+RUN chmod +x entrypoint.sh
+
+# Use the script as the entry point
+ENTRYPOINT ["./entrypoint.sh"]
